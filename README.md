@@ -361,9 +361,9 @@ The `temps` command is the compact CATL-focused temperature report:
 - Group summaries for Cell Areas and Slave Board Resistors.
 - Explicit PEC counters for die-temp and NTC read paths.
 
-Example:
+<details><summary>Example output: <code>status</code> (126S, 2 enclosures)</summary>
 
-```text
+```
 ---- temps ----
   chain: active=10 IC (2 enclosure(s), set by last info)  build_default=5 IC
   die-temp read: done@+19ms  pec_bad=0/20
@@ -384,7 +384,10 @@ Example:
   Cell Areas summary: sensors=16  min=19.1C  avg=23.2C  max=26.9C
   Slave Board Resistors summary: sensors=10  min=20.8C  avg=23.8C  max=25.9C
 ---- End temps ----
+
 ```
+</details>
+
 
 ### Status & Diagnostics: `status`, `test diag selftest`, `test diag mux`, `test diag openwire`, `test passive adcvsc`
 - ADSTAT + RDSTATA/RDSTATB: sum-of-cells, die temperature, analog/digital supply, MUXFAIL, thermal shutdown (`status`)
