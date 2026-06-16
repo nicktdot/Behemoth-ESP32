@@ -853,7 +853,7 @@ The `info` command auto-detects how many enclosures are present on the chain.
 ### Passivity Invariant
 The firmware enforces a **passivity invariant**: no discharge control (DCC1–DCC16) or discharge timer (DCTO) bits are ever set. Every `WRCFGA` / `WRCFGB` write path runs through `cfg_passive_sanitize_tx()` which zeroes all DCC/DCTO bits before transmission. Every `RDCFGA` / `RDCFGB` read-back is audited by `cfg_passive_check_rx()`. A violation aborts the current operation.
 
-This is a harness, not a balancer. It reads. It does not actuate.
+This is a harness, not a balancer. It reads. It does not actuate unless the drain commands are activated.
 
 ### Critical Sections
 All isoSPI transactions run inside `vTaskSuspendAll()` / `xTaskResumeAll()` critical sections to prevent FreeRTOS task switching during the LTC6812's tight timing windows (t_READY ≈ 10–12 ms for a 5-IC chain). No printing, no `delay()`, no socket writes inside the critical window.
