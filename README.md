@@ -787,7 +787,9 @@ Once the ESP32 has an IP on your LAN, two interfaces are available:
    pio device monitor --baud 115200
    ```
 
-Both transports accept the same command set simultaneously.
+3. **Web Interface**; connect to the STA Web interface http://<esp32-ip>:8000 and click the CLI button at the main page, or load /cli path
+
+All transports accept the same command set simultaneously.
 
 ## How To Wire the isoSPI Harness
 
