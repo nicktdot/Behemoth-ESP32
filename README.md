@@ -400,7 +400,7 @@ The `temps` command is the compact CATL-focused temperature report:
 >
 > **Fail**: MUXFAIL indicates the internal multiplexer cannot select channels; the IC is damaged. Self-test failures (CVST/AXST/STATST returning wrong values) mean the ADC or digital filter is defective. Open-wire detection flagging a channel means the physical connection between that cell terminal and the IC sense pin is broken or high-impedance. Sum-of-cells mismatch suggests an ADC linearity issue.
 
-<details><summary>Example output: <code>status</code> (63S, 1 enclosure, PASS)</summary>
+<details><summary>Example output: <code>temps</code> (63S, 1 enclosure, PASS)</summary>
 
 ```
 ---- status/raw (ADSTAT + RDSTATA/B) ----
