@@ -8,7 +8,7 @@
 
 ## What Is This?
 
-Behemoth-ESP32 is a closed-source firmware for an ESP32 microcontroller that monitors and validates Hyliion 104kWh "Behemoth" lithium iron phosphate (LiFePO4) battery packs made of 3× 63S CATL 3.2V 173Ah LiFePO4 enclosures via the Analog Devices LTC6812-1 battery monitor IC family. It communicates over an isolated SPI (isoSPI) daisy chain through an LTC6820 transceiver, reading cell voltages, temperatures, and diagnostic registers from up to 15 ICs (3 enclosures / 189 cells in series).
+Behemoth-ESP32 is closed-source firmware for an ESP32 microcontroller that monitors and validates Hyliion 104kWh "Behemoth" lithium iron phosphate (LiFePO4) battery packs made of 3× 63S CATL 3.2V 173Ah LiFePO4 enclosures via the Analog Devices LTC6812-1 battery monitor IC family. It communicates over an isolated SPI (isoSPI) daisy chain through an LTC6820 transceiver, reading cell voltages, temperatures, and diagnostic registers from up to 15 ICs (3 enclosures / 189 cells in series).
 
 The firmware is an **interactive assertion harness**; not a continuous-polling BMS loop. It issues no SPI traffic at boot and performs no autonomous actions. Every chain operation is triggered explicitly by a human operator via a command-line interface, making it safe for bench characterization, commissioning, and fault diagnosis of high-voltage battery stacks. The harness auto-detects and works with 63S (1 enclosure), 126S (2 enclosures), and 189S (3 enclosures) serial chain configurations.
 
@@ -54,90 +54,6 @@ The `info` command should be run first. It wakes the entire chain with 15 pulses
 - Raw RDCFGA and RDCFGB register dumps for every IC (6 data bytes + PEC, with PEC-OK / PEC-BAD / all-FF status)
 - SPI transfer timing (microseconds per register read)
 - Passivity audit: confirms all DCC and DCTO bits read back as zero across every IC
-
-<details><summary>Example output (63S, 1 enclosure)</summary>
-
-```
----- info ----
-  build: BEHEMOTH_TOTAL_IC=5  BEHEMOTH_TEST_HARNESS=1
-  chain: 5 IC (1 CATL enclosure(s) expected)
-  net:   mode=STA  ip=192.168.13.1
-  SPI:   1000000 Hz, MODE3, MSBFIRST  SCK=18 MISO=19 MOSI=23 CS=5
-[+   8ms] wakeup_sleep + wakeup_idle done (probed 15 IC)
-[+  11ms] chain detection: detected=5 expected=5  MATCH
-[+  14ms] RDCFGA TX: 00 02 2B 0A  (PEC=2B0A)  transfer 1286us
-  IC1: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC2: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC3: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC4: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC5: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-[+  43ms] RDCFGB TX: 00 26 2C C8  (PEC=2CC8)  transfer 1283us
-  IC1: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC2: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC3: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC4: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC5: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-[+  83ms] RDCFGA pec_bad=0/5  RDCFGB pec_bad=0/5
-  passivity audit (DCC1..16, DCC0, DCTO must all be 0):
-  IC1 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC2 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC3 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC4 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC5 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  passivity: OK
-```
- </details>
-  
- <details><summary>Example output (126S, 2 enclosures detection)</summary>
- 
- ```
-  ---- info ----
-  build: BEHEMOTH_TOTAL_IC=5  CHAIN_MAX_IC=15  BEHEMOTH_TEST_HARNESS=1
-  chain: default=5 IC (1 CATL enclosure(s)), active=5 IC (1 enclosure(s))
-  valid runtime chain counts: 5 / 10 / 15 IC (1..3 enclosures)
-  net:   mode=STA  ip=192.168.13.1
-  SPI:   1000000 Hz, MODE3, MSBFIRST  SCK=18 MISO=19 MOSI=23 CS=5
-chain: SPI bus configured, bms_ics[] init+sanitized (no isoSPI traffic issued yet)
-[+   8ms] wakeup_sleep + wakeup_idle done (probed 15 IC)
-[+  11ms] chain detection: detected=10 default=5 active_now=10  *** LONGER THAN DEFAULT -- runtime override applied ***
-[+  24ms] active chain update: previous=5 -> current=10 IC
-[+  28ms] RDCFGA TX: 00 02 2B 0A  (PEC=2B0A)  transfer 1286us
-  IC1: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC2: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC3: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC4: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC5: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC6: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC7: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC8: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC9: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-  IC10: 02 00 00 00 00 00 | pec_rx=BAA2 calc=BAA2  [PEC-OK]
-[+  85ms] RDCFGB TX: 00 26 2C C8  (PEC=2CC8)  transfer 1281us
-  IC1: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC2: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC3: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC4: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC5: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC6: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC7: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC8: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC9: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-  IC10: 00 00 00 00 00 00 | pec_rx=C212 calc=C212  [PEC-OK]
-[+ 147ms] RDCFGA pec_bad=0/10  RDCFGB pec_bad=0/10
-  passivity audit (DCC1..16, DCC0, DCTO must all be 0):
-  IC1 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC2 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC3 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC4 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC5 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC6 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC7 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC8 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC9 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  IC10 CFGA[4]=00 CFGA[5]=00 CFGB[0]=00 CFGB[1]=00  DCC1..8=00 DCC9..12=0 DCTO=0 DCC13..16=0 DCC0=0  PASSIVE
-  passivity: OK
-```
-</details>
 
 ### Cell Voltage Monitoring: `cell` / `cellraw`
 - Broadcast ADCV conversion + per-register RDCV reads (RDCVA–RDCVE)
@@ -188,71 +104,6 @@ chain: SPI bus configured, bms_ics[] init+sanitized (no isoSPI traffic issued ye
     s52 (C1 )=3.2461 s53 (C2 )=3.3317 s54 (C3 )=3.3322 s55 (C4 )=3.3321
     s56 (C6 )=3.3329 s57 (C7 )=3.3328 s58 (C8 )=3.3325 s59 (C9 )=3.3317
     s60 (C10)=3.3326 s61 (C11)=3.3312 s62 (C12)=3.3313 s63 (C13)=3.3307
---- End cell ---
-```
-</details>
-
-<details><summary>Example output (126S, 2 enclosures, PASS)</summary>
-
-```
----- cell voltages ----
-  build: BEHEMOTH_TOTAL_IC=5  active_ic=10  enclosures=2
-  mode:  MD_7KHZ_3KHZ  DCP=disabled  CH=all
-  timing: ADCV@+7ms  RDCV@+18ms  done@+23ms  (rdcv pec_total=0)
-  per-IC PEC: IC1 OK IC2 OK IC3 OK IC4 OK IC5 OK IC6 OK IC7 OK IC8 OK IC9 OK IC10 OK
-
-  pack:  418.076 V   (126 cells across 2 enclosure(s) / 10 IC)
-  min:   3.2970 V   cell #64 (IC6 C1)
-  max:   3.3338 V   cell #33 (IC3 C8)
-  avg:   3.3181 V
-  delta: 0.0368 V
-
-  IC1 (s1..s13, mask 0x3FEF, 13 populated):  sum=43.313V
-    s1  (C1 )=3.3274 s2  (C2 )=3.3324 s3  (C3 )=3.3326 s4  (C4 )=3.3325
-    s5  (C6 )=3.3324 s6  (C7 )=3.3329 s7  (C8 )=3.3328 s8  (C9 )=3.3324
-    s9  (C10)=3.3325 s10 (C11)=3.3316 s11 (C12)=3.3310 s12 (C13)=3.3314
-    s13 (C14)=3.3307
-  IC2 (s14..s26, mask 0x3FEF, 13 populated):  sum=43.312V
-    s14 (C1 )=3.3272 s15 (C2 )=3.3323 s16 (C3 )=3.3323 s17 (C4 )=3.3325
-    s18 (C6 )=3.3325 s19 (C7 )=3.3330 s20 (C8 )=3.3330 s21 (C9 )=3.3323
-    s22 (C10)=3.3320 s23 (C11)=3.3316 s24 (C12)=3.3315 s25 (C13)=3.3316
-    s26 (C14)=3.3305
-  IC3 (s27..s39, mask 0x3FEF, 13 populated):  sum=43.321V
-    s27 (C1 )=3.3282 s28 (C2 )=3.3329 s29 (C3 )=3.3330 s30 (C4 )=3.3331
-    s31 (C6 )=3.3332 s32 (C7 )=3.3336 s33 (C8 )=3.3338 s34 (C9 )=3.3325
-    s35 (C10)=3.3326 s36 (C11)=3.3321 s37 (C12)=3.3319 s38 (C13)=3.3323
-    s39 (C14)=3.3315
-  IC4 (s40..s51, mask 0x1FEF, 12 populated):  sum=39.981V
-    s40 (C1 )=3.3274 s41 (C2 )=3.3324 s42 (C3 )=3.3324 s43 (C4 )=3.3326
-    s44 (C6 )=3.3326 s45 (C7 )=3.3333 s46 (C8 )=3.3333 s47 (C9 )=3.3317
-    s48 (C10)=3.3322 s49 (C11)=3.3310 s50 (C12)=3.3317 s51 (C13)=3.3309
-  IC5 (s52..s63, mask 0x1FEF, 12 populated):  sum=39.979V
-    s52 (C1 )=3.3266 s53 (C2 )=3.3319 s54 (C3 )=3.3319 s55 (C4 )=3.3323
-    s56 (C6 )=3.3323 s57 (C7 )=3.3330 s58 (C8 )=3.3331 s59 (C9 )=3.3314
-    s60 (C10)=3.3321 s61 (C11)=3.3315 s62 (C12)=3.3313 s63 (C13)=3.3319
-  IC6 (s64..s76, mask 0x3FEF, 13 populated):  sum=42.941V
-    s64 (C1 )=3.2970 s65 (C2 )=3.3038 s66 (C3 )=3.3027 s67 (C4 )=3.3035
-    s68 (C6 )=3.3041 s69 (C7 )=3.3032 s70 (C8 )=3.3043 s71 (C9 )=3.3045
-    s72 (C10)=3.3037 s73 (C11)=3.3039 s74 (C12)=3.3031 s75 (C13)=3.3035
-    s76 (C14)=3.3037
-  IC7 (s77..s89, mask 0x3FEF, 13 populated):  sum=42.950V
-    s77 (C1 )=3.2996 s78 (C2 )=3.3040 s79 (C3 )=3.3043 s80 (C4 )=3.3043
-    s81 (C6 )=3.3035 s82 (C7 )=3.3031 s83 (C8 )=3.3038 s84 (C9 )=3.3033
-    s85 (C10)=3.3058 s86 (C11)=3.3053 s87 (C12)=3.3055 s88 (C13)=3.3047
-    s89 (C14)=3.3030
-  IC8 (s90..s102, mask 0x3FEF, 13 populated):  sum=42.970V
-    s90 (C1 )=3.3003 s91 (C2 )=3.3051 s92 (C3 )=3.3058 s93 (C4 )=3.3066
-    s94 (C6 )=3.3059 s95 (C7 )=3.3058 s96 (C8 )=3.3066 s97 (C9 )=3.3059
-    s98 (C10)=3.3061 s99 (C11)=3.3062 s100(C12)=3.3047 s101(C13)=3.3054
-    s102(C14)=3.3054
-  IC9 (s103..s114, mask 0x1FEF, 12 populated):  sum=39.654V
-    s103(C1 )=3.3009 s104(C2 )=3.3053 s105(C3 )=3.3037 s106(C4 )=3.3031
-    s107(C6 )=3.3052 s108(C7 )=3.3047 s109(C8 )=3.3051 s110(C9 )=3.3060
-    s111(C10)=3.3056 s112(C11)=3.3048 s113(C12)=3.3044 s114(C13)=3.3048
-  IC10 (s115..s126, mask 0x1FEF, 12 populated):  sum=39.655V
-    s115(C1 )=3.2997 s116(C2 )=3.3057 s117(C3 )=3.3057 s118(C4 )=3.3052
-    s119(C6 )=3.3052 s120(C7 )=3.3056 s121(C8 )=3.3054 s122(C9 )=3.3051
-    s123(C10)=3.3051 s124(C11)=3.3042 s125(C12)=3.3039 s126(C13)=3.3041
 --- End cell ---
 ```
 </details>
@@ -345,6 +196,42 @@ GPIO voltages (100µV per LSB)  temps via NTC{R25=10k, B=3950, Rpull=10k, VREF2=
   temps: 13 sensor(s)   min=18.5C (IC4 GPIO5)   max=22.1C (IC4 GPIO8)   avg=20.3C   delta=3.6C
 ```
 </details>
+
+### Temperature Monitoring: `temps`
+The `temps` command is the compact CATL-focused temperature report:
+
+- Die temperature from ADSTAT/ITMP using all-channel status capture.
+- Valid CATL NTC groups only:
+  - GPIO1 and GPIO5: Cell Areas
+  - GPIO7: Slave Board Resistors
+- Per-IC table with CATL mask-aware `n/a` handling.
+- Group summaries for Cell Areas and Slave Board Resistors.
+- Explicit PEC counters for die-temp and NTC read paths.
+
+Example:
+
+```text
+---- temps ----
+  chain: active=10 IC (2 enclosure(s), set by last info)  build_default=5 IC
+  die-temp read: done@+19ms  pec_bad=0/20
+  ntc read:      done@+23ms  pec_bad=0/40
+  Valid NTC groups: GPIO1/GPIO5=Cell Areas, GPIO7=Slave Board Resistors
+  IC   DieTempC   GPIO1 CellArea      GPIO5 CellArea      GPIO7 SlaveBoardRes
+  IC1     19.5   1.4432V/ 26.7C       1.4432V/ 26.7C       1.4773V/ 25.7C
+  IC2     19.5   1.4504V/ 26.5C       n/a                  1.4708V/ 25.9C
+  IC3     20.7   1.4381V/ 26.9C       n/a                  1.4796V/ 25.6C
+  IC4     11.1   1.4445V/ 26.7C       1.4563V/ 26.3C       1.4745V/ 25.8C
+  IC5     14.6   1.4442V/ 26.7C       1.4639V/ 26.1C       1.4759V/ 25.7C
+  IC6     23.9   1.6950V/ 19.2C       1.6747V/ 19.8C       1.6412V/ 20.8C
+  IC7     22.3   1.6805V/ 19.7C       n/a                  1.5989V/ 22.1C
+  IC8     18.1   1.6474V/ 20.6C       n/a                  1.5915V/ 22.3C
+  IC9     18.8   1.6837V/ 19.6C       1.7007V/ 19.1C       1.5926V/ 22.2C
+  IC10    23.0   1.6685V/ 20.0C       1.6706V/ 19.9C       1.5977V/ 22.1C
+
+  Cell Areas summary: sensors=16  min=19.1C  avg=23.2C  max=26.9C
+  Slave Board Resistors summary: sensors=10  min=20.8C  avg=23.8C  max=25.9C
+---- End temps ----
+```
 
 ### Status & Diagnostics: `status`, `test diag selftest`, `test diag mux`, `test diag openwire`, `test passive adcvsc`
 - ADSTAT + RDSTATA/RDSTATB: sum-of-cells, die temperature, analog/digital supply, MUXFAIL, thermal shutdown (`status`)
@@ -458,12 +345,13 @@ GPIO voltages (100µV per LSB)  temps via NTC{R25=10k, B=3950, Rpull=10k, VREF2=
 ```
 </details>
 
-### Chain Characterization (Bench Tests): `test bench <h|c|b|j|i>`
+### Chain Characterization (Bench Tests): `test bench <h|c|b|j|i|o>`
 - **Test H** (`test bench h`): RDCV register byte-order cross-check (raw bytes vs parsed codes)
 - **Test C** (`test bench c`): 100-cycle ADCV/RDCV with per-cell statistics and mask verification
 - **Test B** (`test bench b`): Wake-pulse count sweep (minimum reliable sleep→ready pulse count)
 - **Test J** (`test bench j`): Idle-gap recovery characterization (empirical t_sleep boundary)
 - **Test I** (`test bench i`): 10,000-cycle ADCV/RDCV stress test with cumulative PEC tracking
+- **Test O** (`test bench o`): ADOL overlap ADC-path agreement check
 
 > **Pass (H)**: Raw MISO bytes and parsed voltage codes agree; the SPI byte order and register layout are correct for this chain length and wiring.
 >
@@ -585,6 +473,43 @@ GPIO voltages (100µV per LSB)  temps via NTC{R25=10k, B=3950, Rpull=10k, VREF2=
 
 > **⚠ Caution (I)**: The LTC6812 is self-powered from its monitored cell group. The IC's supply current returns through V-, which shares the C0 sense lead with Cell 1. Any resistance in the C0 trace/wire/connector creates a voltage drop that subtracts directly from the Cell 1 measurement; the other cells are unaffected because their sense leads do not carry the IC's return current. During Test I, 10,000 rapid ADCV conversions with REFON held active keep every IC at peak supply current for 3–4 minutes continuously, maximizing this C0 voltage drop. Expect to see Cell 1 (C1) on every IC reading ~85 mV lower than the remaining cells. Run `cell` before and after Test I to quantify the effect.
 
+### Overlap ADC Path Test: `test bench o` (ADOL)
+`test bench o` executes the LTC6812 ADOL overlap conversion and checks overlap-pair agreement:
+
+- Pair A: C7 vs C8
+- Pair B: C13 vs C14
+
+This is a silicon-path agreement test (not a balancing command). It verifies that overlapping conversion paths stay aligned, reports per-pair deltas in counts/mV, and marks CATL-unpopulated channels as `SKIP` (not false failures).
+
+Example:
+
+```text
+=== TEST: bench overlap (ADOL) ===
+  mode=MD_7KHZ_3KHZ dcp=0  TX=03 01 2E 88
+  RDCV PEC total=0
+  IC1 pairA: C7=822F C8=8230 delta=-1 counts (-0.10mV) PASS
+  IC1 pairB: C13=8221 C14=821B delta=+6 counts (+0.60mV) PASS
+  IC2 pairA: C7=8233 C8=8231 delta=+2 counts (+0.20mV) PASS
+  IC2 pairB: C13=8223 C14=821A delta=+9 counts (+0.90mV) PASS
+  IC3 pairA: C7=8239 C8=823B delta=-2 counts (-0.20mV) PASS
+  IC3 pairB: C13=822C C14=8223 delta=+9 counts (+0.90mV) PASS
+  IC4 pairA: C7=8233 C8=8233 delta=+0 counts (+0.00mV) PASS
+  IC4 pairB: C13/C14 SKIP (CATL mask)
+  IC5 pairA: C7=8231 C8=8233 delta=-2 counts (-0.20mV) PASS
+  IC5 pairB: C13/C14 SKIP (CATL mask)
+  IC6 pairA: C7=822D C8=822E delta=-1 counts (-0.10mV) PASS
+  IC6 pairB: C13=8222 C14=821B delta=+7 counts (+0.70mV) PASS
+  IC7 pairA: C7=822E C8=8230 delta=-2 counts (-0.20mV) PASS
+  IC7 pairB: C13=8225 C14=821E delta=+7 counts (+0.70mV) PASS
+  IC8 pairA: C7=8230 C8=8232 delta=-2 counts (-0.20mV) PASS
+  IC8 pairB: C13=8224 C14=821E delta=+6 counts (+0.60mV) PASS
+  IC9 pairA: C7=822F C8=8230 delta=-1 counts (-0.10mV) PASS
+  IC9 pairB: C13/C14 SKIP (CATL mask)
+  IC10 pairA: C7=822E C8=822E delta=+0 counts (+0.00mV) PASS
+  IC10 pairB: C13/C14 SKIP (CATL mask)
+=== bench overlap: PASS checks=16 warn=0 fail=0 skip=4 ===
+```
+
 ### ADC Mode Sweep: `test passive adc_modes`
 All 8 LTC6812 ADC modes validated: 26Hz, 422Hz, 1kHz, 2kHz, 3kHz, 7kHz, 14kHz, 27kHz (with ADCOPT toggle).
 
@@ -634,19 +559,29 @@ After running `test diag selftest`, the LTC6812 result registers contain self-te
 
 ```
 commands:
-  help                          -- command list
-  info                          -- chain detection, CFGA/B dump, passivity audit
-  loopback                      -- SPI wiring test (jumper MOSI→MISO on DC1941D)
-  cell                          -- ADCV + RDCV, per-IC + pack voltage summary
-  cellraw                       -- same as cell with raw MISO byte dump
-  aux                           -- GPIO/thermistor voltages + NTC temperatures
-  status                        -- die temperature, supply rails, MUXFAIL, flags
-  test sanity                   -- offline PEC15 / command-word / opcode checks
-  test bench <h|c|b|j|i>       -- silicon bench tests (live chain required)
-  test passive <name>           -- non-destructive chain tests (status, vref2, sid, adc_modes, adcvsc)
-  reset                         -- recover from self-test mode (clears registers, re-runs conversions)
-  test diag <name>              -- diagnostic tests (selftest, mux, openwire)
-  test cfg <name>               -- config register tests (roundtrip, ovuv)
+  help                 -- this list
+  info                 -- chain status, CFGRA/B dump, passivity audit
+  loopback             -- SPI wiring test: jumper GPIO23 (MOSI) -> GPIO19 (MISO) on DC1941D header first
+  aux                  -- read GPIO/thermistor voltages (RDAUX)
+  temps                -- LTC die temp + valid CATL GPIO NTC table
+  cell                 -- ADCV-all + RDCV-all, per-IC + pack voltage (CATL mask aware)
+  cellraw              -- same as cell but dumps raw MISO bytes per reg-group (diagnostic)
+  reset                -- clear/recover LTC6812 result registers
+  status               -- ADSTAT + RDSTATA/B decoded status
+  test sanity          -- Group 1 offline tests (A: PEC15, G: cmd words, H': RDCV opcodes)
+  test bench           -- list Group 2 silicon tests
+  test bench <h|c|b|j|i|o>  -- run one bench test (requires live CATL chain)
+  enable drain         -- open guarded drain menu
+  drain status         -- decode DCC/DCTO/DTMEN/MUTE from CFG
+  drain help           -- list guarded drain commands
+  test passive         -- list passive LTC6812 tests
+  test passive <status|vref2|sid|adc_modes|adcvsc>
+  test diag            -- list diagnostic LTC6812 tests
+  test diag <selftest|mux|openwire>
+  test cfg             -- list safe CFG write/read tests
+  test cfg <roundtrip|ovuv>
+  NOTE: drain commands are guarded; run 'enable drain' first.
+>
 ```
 
 ## How To Flash
@@ -771,6 +706,99 @@ All voltage thresholds are calibrated for LiFePO4 chemistry:
 
 ### Chain-Passive Boot
 No SPI traffic is issued at boot. The ESP32 starts WiFi, opens the TCP listener, and waits for a command. The first `info` or `cell` command performs the initial chain wake and configuration write.
+
+## ⚠️ CAUTION: Guarded Drain Commands (Active Discharge)
+
+Drain commands can actively set LTC6812 `DCC` bits and sink cell energy through balancing resistors. Use only when intentionally validating discharge behavior and pack conditions.
+
+### Safety model
+
+Drain operations are protected by two gates:
+
+1. **Activation gate**
+   - Run `enable drain`
+   - Opens a short guard window (current implementation: 120 seconds)
+2. **Arming gate**
+   - Run `drain arm <token>`
+   - Token is intentionally not published in this README and must be requested from the author.
+   - Arm validity is 30 seconds.
+   - Armed drain activity re-arms the 30-second window while commands are actively running.
+
+If guard windows expire, drain commands relock until re-enabled/re-armed.
+
+### Drain command menu
+
+```text
+drain commands:
+  enable drain
+  drain status
+  drain help
+  drain arm <token>
+  drain preflight
+  drain off
+  drain mute
+  drain unmute
+  drain probe-muted ic=N cell=C
+  drain probe ic=N cell=C ms=T
+  drain selftest ic=N [ms=T]
+  drain extended ic=N cell=C target=voltage|next-high
+```
+
+### Command behavior
+
+- `enable drain`  
+  Opens guarded mode and prints active-discharge warning.
+
+- `drain status`  
+  Shows guard state and per-IC decode of `DCC`, `DCTO`, `DTMEN`, `MUTE`, plus extended-run state.
+
+- `drain help`  
+  Lists guarded drain commands.
+
+- `drain arm <token>`  
+  Unlocks armed commands for 30 seconds.
+
+- `drain preflight`  
+  Safety checks before active drain:
+  - config PEC clean
+  - `DCC`/`DCTO` clear
+  - cell PEC clean
+  - no invalid populated cell codes
+  - no populated cells below 2.0V
+  - no die over 70.0C
+  - no valid CATL NTC over 70.0C
+
+- `drain off`  
+  Emergency cleanup: `MUTE`, clear drain bits, verify readback, warn if cleanup is incomplete.
+
+- `drain mute` / `drain unmute`  
+  Assert/deassert MUTE and verify state.
+
+- `drain probe-muted ic=N cell=C`  
+  Mute-protected register path check: set one DCC bit, confirm map, then clear.
+
+- `drain probe ic=N cell=C ms=T`  
+  Timed single-cell pulse with live telemetry (cell voltage, die temp, GPIO NTC columns, PEC counters).  
+  Duration is clamped to guard limits: 100 to 300000 ms.
+
+- `drain selftest ic=N [ms=T]`  
+  Runs datasheet-style three-cell groups `(1,6,11)`, `(2,7,12)`, `(3,8,13)`, `(4,9,14)`, `(5,10,15)` with CATL mask-aware skips.  
+  Uses `OBSERVE` (instead of hard fail) when no measurable droop appears in the pulse window.  
+  Pulse duration defaults to 2000 ms and is clamped to 100 to 2000 ms.
+
+- `drain extended ic=N cell=C target=voltage|next-high`  
+  Starts background drain and monitors progress until target or stop condition:
+  - `target=next-high`: uses next lower populated cell in chain
+  - `target=<voltage>`: numeric target in 2.0000 to 5.0000V, and below start voltage
+  - no fixed time hard limit
+  - while active, only `drain status`, `drain help`, and `drain off` are accepted
+
+### Operational cautions
+
+- Always run `drain preflight` before active drain.
+- Use `drain off` immediately on unexpected behavior.
+- Keep the pack under observation during any active drain.
+- Verify passive state after tests with `drain status`.
 
 ## Architecture
 
