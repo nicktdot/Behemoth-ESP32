@@ -637,9 +637,9 @@ The `temps` command is the compact CATL-focused temperature report:
 
 This is a silicon-path agreement test (not a balancing command). It verifies that overlapping conversion paths stay aligned, reports per-pair deltas in counts/mV, and marks CATL-unpopulated channels as `SKIP` (not false failures).
 
-Example:
+<details><summary>Example output (PASS)</summary>
 
-```text
+```
 === TEST: bench overlap (ADOL) ===
   mode=MD_7KHZ_3KHZ dcp=0  TX=03 01 2E 88
   RDCV PEC total=0
@@ -665,6 +665,8 @@ Example:
   IC10 pairB: C13/C14 SKIP (CATL mask)
 === bench overlap: PASS checks=16 warn=0 fail=0 skip=4 ===
 ```
+</details>
+
 
 ### ADC Mode Sweep: `test passive adc_modes`
 All 8 LTC6812 ADC modes validated: 26Hz, 422Hz, 1kHz, 2kHz, 3kHz, 7kHz, 14kHz, 27kHz (with ADCOPT toggle).
