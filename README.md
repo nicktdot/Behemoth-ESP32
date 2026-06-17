@@ -629,15 +629,11 @@ The `temps` command is the compact CATL-focused temperature report:
 
 > **⚠ Caution (I)**: The LTC6812 is self-powered from its monitored cell group. The IC's supply current returns through V-, which shares the C0 sense lead with Cell 1. Any resistance in the C0 trace/wire/connector creates a voltage drop that subtracts directly from the Cell 1 measurement; the other cells are unaffected because their sense leads do not carry the IC's return current. During Test I, 10,000 rapid ADCV conversions with REFON held active keep every IC at peak supply current for 3–4 minutes continuously, maximizing this C0 voltage drop. Expect to see Cell 1 (C1) on every IC reading ~85 mV lower than the remaining cells. Run `cell` before and after Test I to quantify the effect.
 
-### Overlap ADC Path Test: `test bench o` (ADOL)
-`test bench o` executes the LTC6812 ADOL overlap conversion and checks overlap-pair agreement:
+> **Pass (O)**: Executes the LTC6812 ADOL overlap conversion and checks overlap-pair agreement. This is a silicon-path agreement test (not a balancing command). It verifies that overlapping conversion paths stay aligned, reports per-pair deltas in counts/mV, and marks CATL-unpopulated channels as `SKIP` (not false failures).
+>
+> **Fail (O)**: Possible ADC path inconsistency inside the IC, Possible signal integrity/comms issue on isoSPI/SPI path, Possible local sensing/wiring/front-end issue on that IC/cell channels.
 
-- Pair A: C7 vs C8
-- Pair B: C13 vs C14
-
-This is a silicon-path agreement test (not a balancing command). It verifies that overlapping conversion paths stay aligned, reports per-pair deltas in counts/mV, and marks CATL-unpopulated channels as `SKIP` (not false failures).
-
-<details><summary>Example output (PASS)</summary>
+<details><summary>Example output: <code>test bench o</code> (PASS) (on 126S)</summary>
 
 ```
 === TEST: bench overlap (ADOL) ===
