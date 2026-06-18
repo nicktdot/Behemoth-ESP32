@@ -12,7 +12,7 @@ Behemoth-ESP32 is closed-source firmware for an ESP32 microcontroller that monit
 
 The firmware is an **interactive assertion harness**; not a continuous-polling BMS loop. It issues no SPI traffic at boot and performs no autonomous actions. Every chain operation is triggered explicitly by a human operator via a command-line interface, making it safe for bench characterization, commissioning, and fault diagnosis of high-voltage battery stacks. The harness auto-detects and works with 63S (1 enclosure), 126S (2 enclosures), and 189S (3 enclosures) serial chain configurations.
 
-The LTC6812-1 includes internal N-channel MOSFETs for each cell that can sink current through an on-board discharge resistor. This discharge capability is not yet exposed in the firmware. The passivity invariant actively zeroes all DCC and DCTO bits on every configuration write, ensuring no cell discharge can occur. A future firmware increment will add a guarded command menu for controlled per-cell discharge with timed auto-shutoff via DCTO.
+The LTC6812-1 includes internal N-channel MOSFETs for each cell that can sink current through an on-board discharge resistor. This discharge capability is guarded by an arming command. The passivity invariant actively zeroes all DCC and DCTO bits on every configuration write, ensuring no cell discharge can occur. A future firmware increment will add a guarded command menu for controlled per-cell discharge with timed auto-shutoff via DCTO.
 
 ## The Battery
 
@@ -895,8 +895,8 @@ drain commands:
   drain mute
   drain unmute
   drain probe-muted ic=N cell=C
-  drain probe ic=N cell=C ms=T
-  drain selftest ic=N [ms=T]
+  drain probe ic=N cell=C s=T
+  drain selftest ic=N [s=T]
   drain extended ic=N cell=C target=voltage|next-high
 ```
 
@@ -933,14 +933,14 @@ drain commands:
 - `drain probe-muted ic=N cell=C`  
   Mute-protected register path check: set one DCC bit, confirm map, then clear.
 
-- `drain probe ic=N cell=C ms=T`  
+- `drain probe ic=N cell=C s=T`  
   Timed single-cell pulse with live telemetry (cell voltage, die temp, GPIO NTC columns, PEC counters).  
   Duration is clamped to guard limits: 100 to 300000 ms.
 
-- `drain selftest ic=N [ms=T]`  
+- `drain selftest ic=N [s=T]`  
   Runs datasheet-style three-cell groups `(1,6,11)`, `(2,7,12)`, `(3,8,13)`, `(4,9,14)`, `(5,10,15)` with CATL mask-aware skips.  
   Uses `OBSERVE` (instead of hard fail) when no measurable droop appears in the pulse window.  
-  Pulse duration defaults to 2000 ms and is clamped to 100 to 2000 ms.
+  Pulse duration is clamped to 3600s
 
 - `drain extended ic=N cell=C target=voltage|next-high`  
   Starts background drain and monitors progress until target or stop condition:
